@@ -121,8 +121,10 @@ Public Class Form1
 
     ' Event handler for the Purchase button click
     Private Sub btnPurchase_Click(sender As Object, e As EventArgs) Handles btnPurchase.Click
-        If currentUserID = -1 Then
-            MessageBox.Show("Please select a user first.")
+        ' Generate a random user ID
+        Dim userID As Integer = GetRandomUserID()
+        If userID = -1 Then
+            MessageBox.Show("No users found in the database.")
             Return
         End If
 
@@ -134,9 +136,29 @@ Public Class Form1
             Return
         End If
 
-        PurchaseProduct(currentUserID, productID, quantity)
-        RetrievePurchases(currentUserID) ' Refresh the purchases DataGridView
+        PurchaseProduct(userID, productID, quantity)
+        RetrievePurchases(userID) ' Refresh the purchases DataGridView
     End Sub
+
+    Private Function GetRandomUserID() As Integer
+        Using con As New SqlConnection(connectionString)
+            Dim query As String = "SELECT UserID FROM Users"
+            Using cmd As New SqlCommand(query, con)
+                con.Open()
+                Dim dt As New DataTable()
+                dt.Load(cmd.ExecuteReader())
+                If dt.Rows.Count = 0 Then
+                    Return -1 ' No users found
+                End If
+                ' Generate a random index
+                Dim rnd As New Random()
+                Dim index As Integer = rnd.Next(0, dt.Rows.Count)
+                ' Get the UserID at the random index
+                Return CInt(dt.Rows(index)("UserID"))
+            End Using
+        End Using
+    End Function
+
 
     ' Event handler for selecting a user from dgvUsers
     Private Sub dgvUsers_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvUsers.CellClick
